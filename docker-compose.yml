@@ -1,0 +1,46 @@
+services:
+  ollama:
+    build:
+      context: ./ollama_bin
+      dockerfile: Dockerfile
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+
+  mcp-server:
+    build:
+      context: .
+      dockerfile: mcp-docker/Dockerfile
+    container_name: mcp_server
+    environment:
+      MANAGED_ROOT: "/app/managed_dir"
+    volumes:
+      - ./managed_dir:/app/managed_dir
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+
+  agent:
+    build:
+      context: .
+      dockerfile: sysadmin_app/Dockerfile
+    container_name: sysadmin_agent
+    depends_on:
+      - ollama
+      - mcp-server
+    environment:
+      OLLAMA_API_BASE: "http://ollama:11434"
+      OLLAMA_MODEL: "ollama_chat/llama3.2:3b"
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./managed_dir:/app/managed_dir
+    restart: unless-stopped
+
+volumes:
+  ollama_models:

@@ -1,0 +1,6 @@
+google-adk
+fastmcp
+mcp
+litellm
+uvicorn
+fastapi
